@@ -1,83 +1,114 @@
 package edu.pe.cibertec.ciberbank.stepdefinitions;
 
-import edu.pe.cibertec.ciberbank.tasks.RealizarTransferencia;
+import edu.pe.cibertec.ciberbank.tasks.AceptarConfirmacion;
+import edu.pe.cibertec.ciberbank.tasks.IniciarSesion;
+import edu.pe.cibertec.ciberbank.tasks.IntentarTransferir;
+import edu.pe.cibertec.ciberbank.tasks.TransferirMonto;
 import edu.pe.cibertec.ciberbank.userinterface.ConfirmacionScreen;
+import edu.pe.cibertec.ciberbank.userinterface.DasboardScreen;
 import edu.pe.cibertec.ciberbank.userinterface.TransferenciaScreen;
+import io.appium.java_client.android.AndroidDriver;
 import io.cucumber.java.After;
 import io.cucumber.java.Before;
 import io.cucumber.java.es.Cuando;
 import io.cucumber.java.es.Dado;
 import io.cucumber.java.es.Entonces;
-import net.serenitybdd.screenplay.actions.Click;
+import io.cucumber.java.es.Y;
+import net.serenitybdd.core.Serenity;
 import net.serenitybdd.screenplay.actors.OnStage;
 import net.serenitybdd.screenplay.actors.OnlineCast;
 import net.serenitybdd.screenplay.ensure.Ensure;
+import net.serenitybdd.screenplay.waits.WaitUntil;
+
+import java.io.IOException;
+import java.util.Map;
+
+import static net.serenitybdd.screenplay.actors.OnStage.theActorCalled;
+import static net.serenitybdd.screenplay.actors.OnStage.theActorInTheSpotlight;
+import static net.serenitybdd.screenplay.matchers.WebElementStateMatchers.isVisible;
 
 public class TransferenciaStepDefinitions {
 
     @Before
-    public void setTheStage() {
+    public void setStage() {
         OnStage.setTheStage(new OnlineCast());
+        try {
+            AndroidDriver driver = (AndroidDriver) Serenity.getDriver();
+            if (driver != null) {
+                // Borra la caché/preferencias del usuario (sinsaldo vs jaime) sin desconectar ADB
+                try {
+                    driver.executeScript("mobile: clearApp", Map.of("appId", "edu.pe.cibertec.ciberbank"));
+                } catch (Exception ignored) {}
+
+                // Inicia la aplicación limpia
+                driver.activateApp("edu.pe.cibertec.ciberbank");
+            }
+        } catch (Exception e) {
+            // En el primer test de la suite, Serenity inicializará el driver automáticamente
+        }
     }
 
     @After
     public void tearDown() {
-        // Limpieza de estado si fuera requerida por la prueba
+        try {
+            AndroidDriver driver = (AndroidDriver) Serenity.getDriver();
+            if (driver != null) {
+                // Cierra la app limpiamente mediante la API de Appium
+                driver.terminateApp("edu.pe.cibertec.ciberbank");
+            }
+        } catch (Exception ignored) {
+        }
     }
 
     @Dado("que Jaime inició sesión con el usuario {string}")
-    public void queJaimeInicióSesiónConElUsuario(String usuario) {
-        // Aquí se enlaza con el flujo de inicio de sesión según los datos sembrados del usuario
-        OnStage.theActorCalled("Jaime");
-    }
-
-    @Cuando("transfiere {double} al beneficiario {string}")
-    public void transfiereAlBeneficiario(Double monto, String beneficiario) {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                RealizarTransferencia.alBeneficiario(beneficiario, String.valueOf(monto))
+    public void queJaimeInicioSesion(String usuario) {
+        theActorCalled("Jaime").attemptsTo(
+                IniciarSesion.con(usuario, "Cibertec123")
         );
     }
 
-    @Cuando("intenta transferir {int} al beneficiario {string}")
-    public void intentaTransferirAlBeneficiario(Integer monto, String beneficiario) {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                RealizarTransferencia.alBeneficiario(beneficiario, String.valueOf(monto))
+    @Cuando("transfiere {string} al beneficiario {string}")
+    public void transfiereAlBeneficiario(String monto, String beneficiario) {
+        theActorInTheSpotlight().attemptsTo(
+                TransferirMonto.a(monto, beneficiario)
         );
     }
 
-    @Cuando("intenta transferir {double} al beneficiario {string}")
-    public void intentaTransferirDecimalAlBeneficiario(Double monto, String beneficiario) {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                RealizarTransferencia.alBeneficiario(beneficiario, String.valueOf(monto))
+    @Cuando("intenta transferir {string} al beneficiario {string}")
+    public void intentaTransferirAlBeneficiario(String monto, String beneficiario) {
+        theActorInTheSpotlight().attemptsTo(
+                IntentarTransferir.a(monto, beneficiario)
         );
     }
 
-    @Cuando("acepta el diálogo de confirmación")
-    public void aceptaElDiálogoDeConfirmación() {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                Click.on(ConfirmacionScreen.BTN_ACEPTAR)
+    @Y("acepta el diálogo de confirmación")
+    public void aceptaElDialogoDeConfirmacion() {
+        theActorInTheSpotlight().attemptsTo(
+                AceptarConfirmacion.delDialogo()
         );
     }
 
     @Entonces("debería ver un número de operación generado")
-    public void deberíaVerUnNúmeroDeOperaciónGenerado() {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                Ensure.that(ConfirmacionScreen.LBL_NUMERO_OPERACION).isDisplayed()
+    public void deberiaVerUnNumeroDeOperacionGenerado() {
+        theActorInTheSpotlight().attemptsTo(
+                WaitUntil.the(ConfirmacionScreen.TXT_NUM_OPERACION, isVisible()).forNoMoreThan(12).seconds(),
+                Ensure.that(ConfirmacionScreen.TXT_NUM_OPERACION).isDisplayed()
         );
     }
 
-    @Entonces("el saldo debería quedar en {string}")
-    public void elSaldoDeberíaQuedarEn(String saldoEsperado) {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                Ensure.that(ConfirmacionScreen.LBL_SALDO_ACTUAL).text().isEqualTo(saldoEsperado)
+    @Y("el saldo debería quedar en {string}")
+    public void elSaldoDeberiaQuedarEn(String saldoEsperado) {
+        theActorInTheSpotlight().attemptsTo(
+                WaitUntil.the(DasboardScreen.TXT_SALDO, isVisible()).forNoMoreThan(10).seconds(),
+                Ensure.that(DasboardScreen.TXT_SALDO).text().contains(saldoEsperado)
         );
     }
 
-    @Entonces("debería ver el mensaje de error {string}")
-    public void deberíaVerElMensajeDeError(String mensajeError) {
-        OnStage.theActorInTheSpotlight().attemptsTo(
-                Ensure.that(TransferenciaScreen.LBL_MENSAJE_ERROR).text().isEqualTo(mensajeError)
+    @Entonces("debería ver el mensaje de error de transferencia {string}")
+    public void deberiaVerElMensajeDeError(String mensajeErrorEsperado) {
+        theActorInTheSpotlight().attemptsTo(
+                WaitUntil.the(TransferenciaScreen.ERR_MENSAJE, isVisible()).forNoMoreThan(12).seconds(),
+                Ensure.that(TransferenciaScreen.ERR_MENSAJE).text().isEqualTo(mensajeErrorEsperado)
         );
     }
 }
-

@@ -4,9 +4,10 @@ import net.serenitybdd.screenplay.targets.Target;
 import org.openqa.selenium.By;
 
 public class DasboardScreen {
-    private static final String PAQUETE=  "edu.pe.cibertec.ciberbank:id/";
+    private static final String PAQUETE = "edu.pe.cibertec.ciberbank:id/";
 
-    private DasboardScreen (){}
+    private DasboardScreen() {
+    }
 
     public static final Target SALUDO =
             Target.the("saludo bienvenida").located(By.id(PAQUETE + "lbl_bienvenida"));
@@ -22,4 +23,14 @@ public class DasboardScreen {
 
     public static final Target BOTON_SERVICIOS =
             Target.the("acceso rapido servicios").located(By.id(PAQUETE + "btn_servicios"));
+
+    public static final Target TXT_SALDO = Target.the("Texto de saldo disponible")
+            .located(By.id("edu.pe.cibertec.ciberbank:id/lbl_saldo_actualizado"));
+
+    public static final Target BTN_TRANSFERIR = Target.the("Boton ir a Transferencias")
+            .located(By.id("edu.pe.cibertec.ciberbank:id/btn_transferir"));
+
+    public static final Target BTN_CERRAR_SESION = Target.the("Boton cerrar sesion")
+            .located(By.id("edu.pe.cibertec.ciberbank:id/btn_logout"));
 }
+

@@ -5,6 +5,9 @@ import net.serenitybdd.screenplay.Actor;
 import net.serenitybdd.screenplay.Task;
 import net.serenitybdd.screenplay.actions.Click;
 import net.serenitybdd.screenplay.actions.Enter;
+import net.serenitybdd.screenplay.waits.WaitUntil;
+
+import static net.serenitybdd.screenplay.matchers.WebElementStateMatchers.isVisible;
 
 public class IniciarSesion implements Task {
 
@@ -23,6 +26,8 @@ public class IniciarSesion implements Task {
     @Override
     public <T extends Actor> void performAs(T actor) {
         actor.attemptsTo(
+                WaitUntil.the(LoginScreen.CAMPO_USUARIO, isVisible()).forNoMoreThan(20).seconds(),
+
                 Enter.theValue(usuario).into(LoginScreen.CAMPO_USUARIO),
                 Enter.theValue(clave).into(LoginScreen.CAMPO_CLAVE),
                 OcultarTeclado.siEstaAbierto(),
