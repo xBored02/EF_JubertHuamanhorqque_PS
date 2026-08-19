@@ -17,5 +17,5 @@ public class MovimientosScreen {
             Target.the("lista de movimientos").located(By.id(PAQUETE + "lst_movimientos"));
 
     public static final Target LBL_CONTADOR =
-            Target.the("contador de movimientos").located(By.id(PAQUETE + "lbl_contador"));
+            Target.the("contador de movimientos").located(By.id(PAQUETE + "lbl_total_movimientos"));
 }

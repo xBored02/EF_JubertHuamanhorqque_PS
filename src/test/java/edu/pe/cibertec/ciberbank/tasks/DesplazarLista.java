@@ -36,7 +36,7 @@ public class DesplazarLista implements Task {
             driver.executeScript("mobile: scrollGesture", params);
 
             String textoActual = driver.findElement(
-                    AppiumBy.id("edu.pe.cibertec.ciberbank:id/lbl_contador")
+                    AppiumBy.id("edu.pe.cibertec.ciberbank:id/lbl_total_movimientos")
             ).getText();
 
             if (textoActual.contains("30 de 32")) {
